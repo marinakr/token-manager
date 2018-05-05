@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"encoding/json"
+	"log"
 )
 
 const (
@@ -18,8 +20,29 @@ const (
 	StatusPartialContent       = 206
 )
 
+type email_info struct {
+	Email string
+	NickName string
+}
+
+func receive_email(rw http.ResponseWriter, req *http.Request) {
+	decoder := json.NewDecoder(req.Body)
+	var email email_info
+	err := decoder.Decode(&email)
+	if err != nil {
+		panic(err)
+	}
+	defer req.Body.Close()
+	log.Println(email.Email)
+	log.Println(email.NickName)
+	rw.WriteHeader(http.StatusOK)
+	rw.Write([]byte("Success"))
+}
+
 func main() {
-	fmt.Println("Token manager started on ", HttpLynxTokenManagerPort)
+	fmt.Println("Token manager starts on ", HttpLynxTokenManagerPort)
+
+	http.HandleFunc("/email", receive_email)
 
 	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Welcome to token manager!")
