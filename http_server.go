@@ -6,21 +6,14 @@ import (
 	"encoding/json"
 	"regexp"
 	"log"
+	"time"
+	"encoding/base64"
 )
 
 const (
-	//
+	// App parameters
 	HttpLynxTokenManagerPort 	  = ":7665"
-	// HTTP Responces
-	StatusOK                   = 200
-	StatusCreated              = 201
-	StatusAccepted             = 202
-	StatusNonAuthoritativeInfo = 203
-	StatusNoContent            = 204
-	StatusResetContent         = 205
-	StatusPartialContent       = 206
-	StatusBadRequest		   = 400
-	// Regexp
+	// Regexps
     EmilaRegExp = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 )
 
@@ -29,37 +22,43 @@ type email_info struct {
 	NickName string
 }
 
-func generate_response_bytes(code int)(status_line []byte){
-	switch code {
-	case StatusOK:
-		status_line = []byte("Success")
-	default:
-		status_line = []byte("Invalid email")
-	}
-	return
-}
-
-func process_email(ei email_info)(status int){
+func process_email(ei email_info)(status int, status_line []byte) {
 	re := regexp.MustCompile(EmilaRegExp)
-	if re.MatchString(ei.Email) {
+	if re.MatchString(string(ei.Email)) {
 		log.Println(ei.Email)
 		log.Println(ei.NickName)
-		status = StatusOK
+		exp := time.Now().Unix() + 48*60*60
+		response_txt := map[string]interface{}{
+			"email" : ei.Email,
+			"exp" : exp}
+		lnk, err  := json.Marshal(response_txt)
+		if err == nil {
+			log.Printf("%s", lnk)
+			status_line = []byte(base64.StdEncoding.EncodeToString(lnk))
+			status = http.StatusOK
+		}
 	} else {
-		status = StatusBadRequest
+		status_line = []byte("Invalid email")
+		status = http.StatusBadRequest
 	}
 	return
 }
 
 func receive_email(rw http.ResponseWriter, req *http.Request) {
-	decoder := json.NewDecoder(req.Body)
-	var email email_info
-	err := decoder.Decode(&email)
-	if err != nil {
-		panic(err)
-	} else {
-		status_code := process_email(email)
-		status_line := generate_response_bytes(status_code)
+	switch req.Method {
+	case "POST":
+		decoder := json.NewDecoder(req.Body)
+		var email email_info
+		err := decoder.Decode(&email)
+		if err != nil {
+			panic(err)
+		} else {
+			status_code, status_line := process_email(email)
+			rw.WriteHeader(status_code)
+			rw.Write(status_line)
+		}
+	default:
+		status_code, status_line := http.StatusMethodNotAllowed, []byte("Method not allowed")
 		rw.WriteHeader(status_code)
 		rw.Write(status_line)
 	}
@@ -67,7 +66,7 @@ func receive_email(rw http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	fmt.Println("Token manager starts on ", HttpLynxTokenManagerPort)
+	log.Println("Token manager starts on ", HttpLynxTokenManagerPort)
 
 	http.HandleFunc("/email", receive_email)
 
