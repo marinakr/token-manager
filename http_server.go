@@ -30,10 +30,11 @@ func receive_email(rw http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+
+	InitRedisClient()
+
 	log.Println("Token manager starts on ", HttpLynxTokenManagerPort)
-
 	http.HandleFunc("/email", receive_email)
-
 	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Welcome to token manager!")
 	})
