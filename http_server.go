@@ -4,12 +4,16 @@ import (
 	"net/http"
 	"fmt"
 	"log"
+	"github.com/go-redis/redis"
 )
 
 const (
 	HttpLynxTokenManagerPort 	  = ":7665"
 )
 
+var smtpauthinfo = &smtp_data{}
+var rediscli *redis.Client
+var config map[string]interface{}
 
 func receive_email(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
@@ -19,9 +23,8 @@ func receive_email(rw http.ResponseWriter, req *http.Request) {
 		if code != 0 {
 			http.Error(rw, mess, code)
 		} else {
-			err = process_email(email)
-			rw.WriteHeader(status_code)
-			rw.Write(status_line)
+			code, mess := ProcessEmail(email)
+			EncodeReqResp(&rw, code, mess)
 		}
 	default:
 		http.Error(rw, "Method not allowed", http.StatusMethodNotAllowed)
@@ -30,8 +33,9 @@ func receive_email(rw http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-
-	InitRedisClient()
+	ReadConfig(&config)
+	rediscli = InitRedisClient()
+	InitEmailClient(smtpauthinfo)
 
 	log.Println("Token manager starts on ", HttpLynxTokenManagerPort)
 	http.HandleFunc("/email", receive_email)

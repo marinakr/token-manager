@@ -1,0 +1,16 @@
+{
+  "redis": {
+    "Addr": "localhost:6379",
+    "Password": "",
+    "DB": 0
+  },
+  "token_manager": {
+    "port": 2803
+  },
+  "email_creds": {
+    "username": "useremail@email.com",
+    "password": "emailpassword",
+    "host": "email.com",
+    "identity": ""
+  }
+}
