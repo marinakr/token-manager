@@ -5,6 +5,8 @@ import (
 	"net/smtp"
 	"encoding/json"
 	"strconv"
+	"github.com/dgrijalva/jwt-go"
+	"time"
 )
 
 const(
@@ -18,12 +20,19 @@ const(
 	InvalidData = 3
 	EmailInUse = 4
 	NickNameInUse = 5
+	CodeExpired = 6
+	CodeWrong = 7
 	DBError = -1
 	)
 
 type email_info struct {
 	Email string
 	NickName string
+}
+
+type email_confirm struct {
+	Email string
+	Code int
 }
 
 type smtp_data struct {
@@ -58,9 +67,9 @@ func InitEmailClient(smtpdata *smtp_data) (auth smtp.Auth) {
 func (ei *email_info) SendEmail() {
 	code := Random(1000, 9999)
 	smtp.SendMail(
-		smtpauthinfo.host,
-		smtpauthinfo.auth,
-		smtpauthinfo.username,
+		smtp_authinfo.host,
+		smtp_authinfo.auth,
+		smtp_authinfo.username,
 		[]string{ei.Email},
 		[]byte(strconv.Itoa(code)))
 	//48 hours
@@ -92,13 +101,13 @@ func (ei *email_info) ValidateRegdata() (code int, mess string) {
 }
 
 func (ei *email_info)CheckRegdataAvailabe() (err int, mess string) {
-	nick, err_nick := GetKeyData(ei.Email)
+	nick_code, err_nick := GetKeyData(ei.Email)
 	email, err_email := GetKeyData(ei.NickName)
 	if (err_nick != nil) && (err_email != nil ) {
 		err = DBError
 		mess = "DB error"
 	} else {
-		if (email == nil) && (nick == nil){
+		if (email == nil) && (nick_code == nil){
 			err = Ok
 		} else {
 			if email != nil {
@@ -119,6 +128,41 @@ func ProcessEmail(ei email_info)(code int, mess string){
 		code, mess = ei.CheckRegdataAvailabe()
 		if code == Ok {
 			ei.SendEmail()
+		}
+	}
+	return
+}
+
+func GenJWT(nickname string)(jwttoken string){
+	//TODO: read from config
+	mySigningKey := "secretkey"
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["user"] = nickname
+	claims["exp"] = time.Now().Add(time.Hour * 24 * 31 * 12).Unix()
+	claims["iot"] = time.Now().Unix()
+	jwttoken, _ = token.SignedString(mySigningKey)
+	return
+}
+
+func GenEmailJWT(ec *email_confirm)(code int, mess string){
+	reg_info, err := GetKeyData(ec.Email)
+	if err != nil{
+		code = DBError
+		mess = "DB error"
+	} else {
+		if reg_info == nil {
+			code = CodeExpired
+			mess = "Confirmation time expired"
+		} else {
+			ri := reg_info.(map[string]interface{})
+			if ec.Code == ri["code"].(int){
+				code = Ok
+				mess = GenJWT(ri["nick"].(string))
+			} else {
+				code = CodeWrong
+				mess = "Confirmation code is not match"
+			}
 		}
 	}
 	return
