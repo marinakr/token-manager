@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"fmt"
 	"github.com/go-redis/redis"
-	"encoding/json"
 )
 
 var smtp_authinfo = &smtp_data{}
@@ -27,7 +26,7 @@ func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 			http.Error(rw, mess, code)
 		} else {
 			code, mess := PrepareEmailCode(ei)
-			EncodeReqResp(&rw, code, mess)
+			EncodeReqResp(rw, code, mess)
 		}
 	default:
 		http.Error(rw, "Method not allowed", http.StatusMethodNotAllowed)
@@ -45,7 +44,7 @@ func ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 		} else {
 			code, mess := ConfirmEmail(ec)
 			payload := GenResponsePayload(code, mess)
-			EncodeReqResp(&rw, http.StatusOK, payload)
+			EncodeReqResp(rw, http.StatusOK, payload)
 		}
 	default:
 		http.Error(rw, "Method not allowed", http.StatusMethodNotAllowed)
