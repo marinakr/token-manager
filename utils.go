@@ -44,3 +44,12 @@ func ReadConfig(configuration *map[string]interface{}){
 		panic("Can not read config file!")
 	}
 }
+
+func GenResponsePayload(code int, mess string)(string){
+	payload := make(map[string]interface{})
+	payload["code"] = code
+	payload["mess"] = mess
+	resp, _ := json.Marshal(payload)
+	resp_payload := string(resp[:])
+	return resp_payload
+}

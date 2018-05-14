@@ -18,15 +18,6 @@ func AppPort()(port string){
 	return
 }
 
-func GenResponsePayload(code int, mess string)(string){
-	payload := make(map[string]interface{})
-	payload["code"] = code
-	payload["mess"] = mess
-	resp, _ := json.Marshal(payload)
-	resp_payload := string(resp[:])
-	return resp_payload
-}
-
 func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
