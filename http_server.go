@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"fmt"
 	"github.com/go-redis/redis"
+	"encoding/json"
 )
 
 var smtp_authinfo = &smtp_data{}
@@ -17,12 +18,20 @@ func AppPort()(port string){
 	return
 }
 
+func GenResponsePayload(code int, mess string)([]byte){
+	payload := make(map[string]interface{})
+	payload["code"] = code
+	payload["mess"] = mess
+	resp, _ := json.Marshal(payload)
+	return resp
+}
+
 func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
 		var ei EmailInfo
 		code, mess := DecodeReqBody(req, &ei)
-		if code != 0 {
+		if code != Ok {
 			http.Error(rw, mess, code)
 		} else {
 			code, mess := PrepareEmailCode(ei)
@@ -39,11 +48,12 @@ func ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 	case "POST":
 		ec := &EmailInfo{}
 		code, mess := DecodeReqBody(req, ec)
-		if code != 0 {
+		if code != Ok {
 			http.Error(rw, mess, code)
 		} else {
 			code, mess := ConfirmEmail(ec)
-			EncodeReqResp(&rw, code, mess)
+			payload := GenResponsePayload(code, mess)
+			EncodeReqResp(&rw, http.StatusOK, string(payload[:]))
 		}
 	default:
 		http.Error(rw, "Method not allowed", http.StatusMethodNotAllowed)
