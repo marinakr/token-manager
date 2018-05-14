@@ -22,7 +22,7 @@ func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 	case "POST":
 		var ei EmailInfo
 		code, mess := DecodeReqBody(req, &ei)
-		if code != 0 {
+		if code != Ok {
 			http.Error(rw, mess, code)
 		} else {
 			code, mess := PrepareEmailCode(ei)
@@ -39,7 +39,7 @@ func ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 	case "POST":
 		ec := &EmailInfo{}
 		code, mess := DecodeReqBody(req, ec)
-		if code != 0 {
+		if code != Ok {
 			http.Error(rw, mess, code)
 		} else {
 			code, mess := ConfirmEmail(ec)
