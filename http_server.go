@@ -18,12 +18,13 @@ func AppPort()(port string){
 	return
 }
 
-func GenResponsePayload(code int, mess string)([]byte){
+func GenResponsePayload(code int, mess string)(string){
 	payload := make(map[string]interface{})
 	payload["code"] = code
 	payload["mess"] = mess
 	resp, _ := json.Marshal(payload)
-	return resp
+	resp_payload := string(resp[:])
+	return resp_payload
 }
 
 func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
@@ -53,7 +54,7 @@ func ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 		} else {
 			code, mess := ConfirmEmail(ec)
 			payload := GenResponsePayload(code, mess)
-			EncodeReqResp(&rw, http.StatusOK, string(payload[:]))
+			EncodeReqResp(&rw, http.StatusOK, payload)
 		}
 	default:
 		http.Error(rw, "Method not allowed", http.StatusMethodNotAllowed)
