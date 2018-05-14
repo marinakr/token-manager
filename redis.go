@@ -9,20 +9,31 @@ import (
 func InitRedisClient() *redis.Client {
 	redisMap := config["redis"]
 	data, err_json := json.Marshal(redisMap)
-	var result redis.Options
-	json.Unmarshal(data, &result)
-	client := redis.NewClient(&result)
-	_, err := client.Ping().Result()
-	if err != nil || err_json != nil {
-		panic("No connection to redis")
+	if err_json != nil{
+		var result redis.Options
+		json.Unmarshal(data, &result)
+		client := redis.NewClient(&result)
+		_, err_ping := client.Ping().Result()
+		if err_ping != nil {
+			panic("No connection to redis")
+		} else {
+			return client
+		}
 	} else {
-		return client
+		panic("Error in config: redis")
 	}
 }
 
-func StoreRegdata(info *email_info, code int, expTime int) {
-	err_em := rediscli.Set(info.Email, map[string]interface{}{"nick": info.NickName, "code": code}, time.Duration(expTime) * time.Second).Err()
-	err_nk := rediscli.Set(info.NickName, info.Email, time.Duration(expTime) * time.Second).Err()
+func StoreRegdata(ei EmailInfo, expTime int) {
+	JsonEmail, _ := json.Marshal(ei)
+	err_em := rediscli.Set(
+		ei.Email,
+		JsonEmail,
+		time.Duration(expTime) * time.Second).Err()
+	err_nk := rediscli.Set(
+		ei.NickName,
+		ei.Email,
+		time.Duration(expTime) * time.Second).Err()
 	if (err_em != nil) && (err_nk != nil){
 		panic("redis set failed")
 	}

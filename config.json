@@ -5,7 +5,7 @@
     "DB": 0
   },
   "token_manager": {
-    "port": 2803
+    "port": "2803"
   },
   "email_creds": {
     "username": "useremail@email.com",

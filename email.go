@@ -25,14 +25,10 @@ const(
 	DBError = -1
 	)
 
-type email_info struct {
-	Email string
-	NickName string
-}
-
-type email_confirm struct {
-	Email string
-	Code int
+type EmailInfo struct {
+	Email string  `json:"email"`
+	NickName string `json:"nick"`
+	Code int `json:"code"`
 }
 
 type smtp_data struct {
@@ -52,31 +48,27 @@ func (smtpdata *smtp_data)AuthEmailClient() (auth smtp.Auth) {
 	return
 }
 
-func InitEmailClient(smtpdata *smtp_data) (auth smtp.Auth) {
+func InitEmailClient(smtpdata *smtp_data) {
 	redisMap := config["email_creds"]
 	data, err := json.Marshal(redisMap)
 	json.Unmarshal(data, smtpdata)
 	if err != nil {
 		smtpdata.auth = smtpdata.AuthEmailClient()
-		return  smtpdata.auth
 	} else {
 		panic("Error smtp connection")
 	}
 }
 
-func (ei *email_info) SendEmail() {
-	code := Random(1000, 9999)
+func (ei *EmailInfo) SendEmail() {
 	smtp.SendMail(
 		smtp_authinfo.host,
 		smtp_authinfo.auth,
 		smtp_authinfo.username,
 		[]string{ei.Email},
-		[]byte(strconv.Itoa(code)))
-	//48 hours
-	StoreRegdata(ei, code, 48*60*60)
+		[]byte(strconv.Itoa(ei.Code)))
 }
 
-func (ei *email_info) ValidateRegdata() (code int, mess string) {
+func (ei *EmailInfo) ValidateRegdata() (code int, mess string) {
 	re_email := regexp.MustCompile(EmilaRegExp)
 	re_nodename := regexp.MustCompile(NickNameRegExp)
 	is_email := re_email.MatchString(string(ei.Email))
@@ -100,14 +92,14 @@ func (ei *email_info) ValidateRegdata() (code int, mess string) {
 	return
 }
 
-func (ei *email_info)CheckRegdataAvailabe() (err int, mess string) {
-	nick_code, err_nick := GetKeyData(ei.Email)
+func (ei *EmailInfo)CheckRegdataAvailabe() (err int, mess string) {
+	data, err_nick := GetKeyData(ei.Email)
 	email, err_email := GetKeyData(ei.NickName)
 	if (err_nick != nil) && (err_email != nil ) {
 		err = DBError
 		mess = "DB error"
 	} else {
-		if (email == nil) && (nick_code == nil){
+		if (email == nil) && (data == nil){
 			err = Ok
 		} else {
 			if email != nil {
@@ -122,11 +114,14 @@ func (ei *email_info)CheckRegdataAvailabe() (err int, mess string) {
 	return
 }
 
-func ProcessEmail(ei email_info)(code int, mess string){
+func PrepareEmailCode(ei EmailInfo)(code int, mess string){
 	code, mess = ei.ValidateRegdata()
 	if code == Ok {
 		code, mess = ei.CheckRegdataAvailabe()
 		if code == Ok {
+			ei.Code = Random(1000, 9999)
+			//48 hours
+			StoreRegdata(ei, 48*60*60)
 			ei.SendEmail()
 		}
 	}
@@ -145,20 +140,22 @@ func GenJWT(nickname string)(jwttoken string){
 	return
 }
 
-func GenEmailJWT(ec *email_confirm)(code int, mess string){
-	reg_info, err := GetKeyData(ec.Email)
+func ConfirmEmail(ec *EmailInfo)(code int, mess string){
+	data, err := GetKeyData(ec.Email)
 	if err != nil{
 		code = DBError
 		mess = "DB error"
 	} else {
-		if reg_info == nil {
+		if data == nil {
 			code = CodeExpired
 			mess = "Confirmation time expired"
 		} else {
-			ri := reg_info.(map[string]interface{})
-			if ec.Code == ri["code"].(int){
+			regdata := &EmailInfo{}
+			json.Unmarshal([]byte(data.(string)), regdata)
+			if ec.Code == regdata.Code{
+				StoreRegdata(*regdata, 0)
 				code = Ok
-				mess = GenJWT(ri["nick"].(string))
+				mess = GenJWT(regdata.NickName)
 			} else {
 				code = CodeWrong
 				mess = "Confirmation code is not match"

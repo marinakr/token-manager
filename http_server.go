@@ -3,27 +3,29 @@ package main
 import (
 	"net/http"
 	"fmt"
-	"log"
 	"github.com/go-redis/redis"
-)
-
-const (
-	HttpLynxTokenManagerPort 	  = ":7665"
 )
 
 var smtp_authinfo = &smtp_data{}
 var rediscli *redis.Client
 var config map[string]interface{}
 
+func AppPort()(port string){
+	tm := config["token_manager"]
+	token_manager := tm.(map[string]interface{})
+	port = token_manager["port"].(string)
+	return
+}
+
 func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
-		var ei email_info
+		var ei EmailInfo
 		code, mess := DecodeReqBody(req, &ei)
 		if code != 0 {
 			http.Error(rw, mess, code)
 		} else {
-			code, mess := ProcessEmail(ei)
+			code, mess := PrepareEmailCode(ei)
 			EncodeReqResp(&rw, code, mess)
 		}
 	default:
@@ -32,15 +34,15 @@ func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 }
 
-func ConfirmEmail(rw http.ResponseWriter, req *http.Request) {
+func ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
-		ec := &email_confirm{}
+		ec := &EmailInfo{}
 		code, mess := DecodeReqBody(req, ec)
 		if code != 0 {
 			http.Error(rw, mess, code)
 		} else {
-			code, mess := GenEmailJWT(ec)
+			code, mess := ConfirmEmail(ec)
 			EncodeReqResp(&rw, code, mess)
 		}
 	default:
@@ -54,11 +56,11 @@ func main() {
 	rediscli = InitRedisClient()
 	InitEmailClient(smtp_authinfo)
 
-	log.Println("Token manager starts on ", HttpLynxTokenManagerPort)
+	fmt.Println("Token manager starts on ",  AppPort())
 	http.HandleFunc("/reg-email", ReceiveEmail)
-	http.HandleFunc("/confirm-email", ConfirmEmail)
+	http.HandleFunc("/confirm-email", ReceiveEmailCode)
 	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Welcome to token manager!")
 	})
-	http.ListenAndServe(HttpLynxTokenManagerPort, nil)
+	http.ListenAndServe( AppPort(), nil)
 }
