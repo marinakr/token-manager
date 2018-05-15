@@ -5,6 +5,12 @@ import (
 	"encoding/json"
 )
 
+type ConfENV interface {
+	RedisConf() interface{}
+	EmailConf() interface{}
+	PortConf() string
+}
+
 type conf map[string]interface{}
 
 func ReadConfigFile(configuration *map[string]interface{}){

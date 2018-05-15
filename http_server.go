@@ -4,15 +4,10 @@ import (
 	//
 	"fmt"
 	"net/http"
+	"./conf"
 	"./redscli"
 	//
-	"github.com/go-redis/redis"
-	"token-manager/conf"
 )
-
-var rediscli *redis.Client
-var config map[string]interface{}
-var smtpdata = &SmtpData{}
 
 type Env struct {
 	dbcli redscli.RedisENV
@@ -55,12 +50,7 @@ func (env *Env)ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	//read config//
 	config := conf.NewConig()
-
-	//cleints
-	InitEmailClient(smtpdata)
-
 	dbclient := redscli.New(config.RedisConf())
 	env := &Env{dbcli: dbclient}
 

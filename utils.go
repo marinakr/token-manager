@@ -5,7 +5,6 @@ import (
 		"encoding/json"
 		"math/rand"
 		"time"
-		"os"
 		"fmt"
        )
 
@@ -28,7 +27,7 @@ decoder := json.NewDecoder(req.Body)
 
 func EncodeReqResp(rw http.ResponseWriter, Status int, mess string){
 	fmt.Fprintf(rw, mess)
-		rw.WriteHeader(http.StatusOK)
+		rw.WriteHeader(Status)
 }
 
 func Random(min, max int) int {

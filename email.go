@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	"jwt-go"
 )
 
 const (
@@ -23,7 +24,6 @@ const (
 	NickNameInUse   = 5
 	CodeExpired     = 6
 	CodeWrong       = 7
-	DBError         = -1
 )
 
 type EmailInfo struct {
