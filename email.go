@@ -124,39 +124,39 @@ func PrepareEmailCode(ei EmailInfo) (code int, mess string) {
 	return
 }
 
-func GenJWT(nickname string) (jwttoken string) {
+func GenJWT(nickname string) string {
 	//TODO: read from config
-	mySigningKey := "secretkey"
+	mySigningKey := []byte("secretkey")
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user"] = nickname
 	claims["exp"] = time.Now().Add(time.Hour * 24 * 31 * 12).Unix()
 	claims["iot"] = time.Now().Unix()
-	jwttoken, _ = token.SignedString(mySigningKey)
-	return
+	jwtres, err := token.SignedString(mySigningKey)
+	if err != nil {
+		fmt.Println("JWT generation error: ", err)
+		panic(err)
+	}
+	return jwtres
 }
 
 func ConfirmEmail(ec *EmailInfo) (code int, mess string) {
-	data, err := GetKeyData(ec.Email)
-	if err != nil {
-		code = DBError
-		mess = "DB error"
+	data, _ := GetKeyData(ec.Email)
+	if data == nil {
+		code = CodeExpired
+		mess = "Confirmation time expired / Email not found"
 	} else {
-		if data == nil {
-			code = CodeExpired
-			mess = "Confirmation time expired"
+		regdata := &EmailInfo{}
+		json.Unmarshal([]byte(data.(string)), regdata)
+		if ec.Code == regdata.Code {
+			StoreRegdata(*regdata, 0)
+			code = Ok
+			mess = GenJWT(regdata.NickName)
 		} else {
-			regdata := &EmailInfo{}
-			json.Unmarshal([]byte(data.(string)), regdata)
-			if ec.Code == regdata.Code {
-				StoreRegdata(*regdata, 0)
-				code = Ok
-				mess = GenJWT(regdata.NickName)
-			} else {
-				code = CodeWrong
-				mess = "Confirmation code is not match"
-			}
+			code = CodeWrong
+			mess = "Confirmation code is not match"
 		}
 	}
+
 	return
 }
