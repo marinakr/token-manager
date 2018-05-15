@@ -36,15 +36,7 @@ func Random(min, max int) int {
 		return rand.Intn(max - min) + min
 }
 
-func ReadConfig(configuration *map[string]interface{}){
-	cfgfile, _ := os.Open("config.json")
-		defer cfgfile.Close()
-		decoder := json.NewDecoder(cfgfile)
-		err := decoder.Decode(configuration)
-		if err != nil {
-			panic("Can not read config file!")
-		}
-}
+
 
 func GenResponsePayload(code int, mess string)(string){
 payload := make(map[string]interface{})

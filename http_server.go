@@ -1,23 +1,24 @@
 package main
 
 import (
+	//
 	"fmt"
-	"github.com/go-redis/redis"
 	"net/http"
+	"./redscli"
+	//
+	"github.com/go-redis/redis"
+	"token-manager/conf"
 )
 
 var rediscli *redis.Client
 var config map[string]interface{}
 var smtpdata = &SmtpData{}
 
-func AppPort() (port string) {
-	tm := config["token_manager"]
-	token_manager := tm.(map[string]interface{})
-	port = token_manager["port"].(string)
-	return
+type Env struct {
+	dbcli redscli.RedisENV
 }
 
-func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
+func (env *Env)ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
 		var ei EmailInfo
@@ -35,7 +36,7 @@ func ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 }
 
-func ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
+func (env *Env)ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
 		ec := &EmailInfo{}
@@ -54,15 +55,22 @@ func ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	ReadConfig(&config)
-	rediscli = InitRedisClient()
+	//read config//
+	config := conf.NewConig()
+
+	//cleints
 	InitEmailClient(smtpdata)
 
-	fmt.Println("Token manager starts on ", AppPort())
-	http.HandleFunc("/reg-email", ReceiveEmail)
-	http.HandleFunc("/confirm-email", ReceiveEmailCode)
+	dbclient := redscli.New(config.RedisConf())
+	env := &Env{dbcli: dbclient}
+
+	//main app
+	port := config.PortConf()
+	fmt.Println("Token manager starts on ", port)
+	http.HandleFunc("/reg-email", env.ReceiveEmail)
+	http.HandleFunc("/confirm-email", env.ReceiveEmailCode)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Welcome to token manager!")
 	})
-	http.ListenAndServe(AppPort(), nil)
+	http.ListenAndServe(port, nil)
 }

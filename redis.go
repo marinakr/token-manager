@@ -6,23 +6,7 @@ import (
 	"time"
 )
 
-func InitRedisClient() *redis.Client {
-	redisMap := config["redis"]
-	data, err_json := json.Marshal(redisMap)
-	if err_json == nil {
-		var result redis.Options
-		json.Unmarshal(data, &result)
-		client := redis.NewClient(&result)
-		_, err_ping := client.Ping().Result()
-		if err_ping != nil {
-			panic("No connection to redis")
-		} else {
-			return client
-		}
-	} else {
-		panic("Error in config file: redis")
-	}
-}
+
 
 func StoreRegdata(ei EmailInfo, expTime int) {
 	JsonEmail, _ := json.Marshal(ei)
