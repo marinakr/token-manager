@@ -8,9 +8,10 @@
     "port": ":2803"
   },
   "email_creds": {
-    "username": "useremail@email.com",
-    "password": "emailpassword",
-    "host": "email.com",
+    "username": "..@gmail.com",
+    "password": "..",
+    "host": "smtp.gmail.com:587",
+    "smtphost": "smtp.gmail.com",
     "identity": ""
   }
 }

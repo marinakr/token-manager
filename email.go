@@ -32,42 +32,37 @@ type EmailInfo struct {
 	Code     int    `json:"code"`
 }
 
-type smtp_data struct {
-	username string
-	password string
-	host     string
-	identity string
-	auth     smtp.Auth
+type SmtpData struct {
+	Username string
+	Password string
+	Host     string
+	Smtphost string
+	Identity string
+	Auth     smtp.Auth
 }
 
-func (smtpdata *smtp_data) AuthEmailClient() (auth smtp.Auth) {
-	auth = smtp.PlainAuth(
-		smtpdata.identity,
-		smtpdata.username,
-		smtpdata.password,
-		smtpdata.host)
-	return
-}
-
-func InitEmailClient(smtpdata *smtp_data) {
-	redisMap := config["email_creds"]
-	data, err := json.Marshal(redisMap)
+func InitEmailClient(smtpdata *SmtpData) {
+	emailCreds := config["email_creds"]
+	data, err := json.Marshal(emailCreds)
 	json.Unmarshal(data, smtpdata)
 	if err == nil {
-		smtpdata.auth = smtpdata.AuthEmailClient()
+		smtpdata.Auth = smtp.PlainAuth(smtpdata.Identity, smtpdata.Username, smtpdata.Password, smtpdata.Smtphost)
 	} else {
-		fmt.Println("Error smtp connection")
+		fmt.Println("Error smtp auth")
 		panic(err)
 	}
 }
 
-func (ei *EmailInfo) SendEmail() {
-	smtp.SendMail(
-		smtp_authinfo.host,
-		smtp_authinfo.auth,
-		smtp_authinfo.username,
+func (smtpdata *SmtpData) SendEmail(ei EmailInfo) {
+	err := smtp.SendMail(
+		smtpdata.Host,
+		smtpdata.Auth,
+		smtpdata.Username,
 		[]string{ei.Email},
 		[]byte(strconv.Itoa(ei.Code)))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (ei *EmailInfo) ValidateRegdata() (code int, mess string) {
@@ -121,9 +116,9 @@ func PrepareEmailCode(ei EmailInfo) (code int, mess string) {
 		code, mess = ei.CheckRegdataAvailabe()
 		if code == Ok {
 			ei.Code = Random(1000, 9999)
-			//48 hours
-			StoreRegdata(ei, 48*60*60)
-			ei.SendEmail()
+			//48 hours  48*60*60
+			StoreRegdata(ei, 60)
+			smtpdata.SendEmail(ei)
 		}
 	}
 	return
