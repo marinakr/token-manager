@@ -52,3 +52,9 @@ ERRORS:
 
 
 ERROR CODE -1: equal to 500 HTTP error: "database error"
+
+BAD Request:
+curl  -X POST http://localhost:2803/reg-email -d'{"Bad json"}'
+< HTTP/1.1 400 Bad Request
+Invalid json
+
