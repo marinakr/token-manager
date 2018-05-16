@@ -1,6 +1,7 @@
 package reg
 
 import (
+	//
 	"net/http"
 	"encoding/json"
 	"errors"
@@ -10,12 +11,12 @@ import (
 	"regexp"
 	"github.com/dgrijalva/jwt-go"
 	"fmt"
-	"jwt-go"
+	//
 )
 
 const (
 	//Regexp
-	NickNameRegExp = "^([a-z0-9._-]){1-256}"
+	NickNameRegExp = "^[a-zA-Z0-9._-]{1,256}$"
 	EmilaRegExp    = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 	//Code range
 	MinCODE = 1000
@@ -41,8 +42,8 @@ func VailidateRegData(req *http.Request) (ei EmailReg, err error) {
 	} else {
 		re_email := regexp.MustCompile(EmilaRegExp)
 		re_nodename := regexp.MustCompile(NickNameRegExp)
-		is_email := re_email.MatchString(string(v.Email))
-		is_nick := re_nodename.MatchString(string(v.NickName))
+		is_email := re_email.MatchString(v.Email)
+		is_nick := re_nodename.MatchString(v.NickName)
 		if !is_email {
 			err = errors.New("Invalid email")
 		} else if !is_nick {
