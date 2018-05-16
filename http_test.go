@@ -31,7 +31,7 @@ func TestRegCheckMethodNotAllowed(t *testing.T) {
 }
 
 func TestRegCheckBadJson(t *testing.T) {
-	req, err := http.NewRequest("POST", "/reg-email", nil)
+	req, err := http.NewRequest("POST", "http://localhost:2803/reg-email", nil)
 	if err != nil {
 		t.Fatal(err)
 	} else {
@@ -40,7 +40,7 @@ func TestRegCheckBadJson(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		} else {
-			if req.Response.StatusCode != http.StatusMethodNotAllowed {
+			if resp.StatusCode != http.StatusBadRequest {
 				t.Fatal("Should fails as bad request")
 			}
 			defer resp.Body.Close()
