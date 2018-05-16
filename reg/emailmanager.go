@@ -140,7 +140,7 @@ func (ec *EmailConf) CheckEmailConfirm(
 		nick := nickname.(string)
 		code, _ := dbcli.GetKeyData(nick)
 		if code != ec.Code {
-			errors.New("Confirmation code is not match")
+			err = errors.New("Confirmation code is not match")
 		} else {
 			jwtoken = GenJWT(nick)
 		}

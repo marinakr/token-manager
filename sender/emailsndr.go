@@ -17,6 +17,7 @@ type SmtpData struct {
 	Host     string
 	Smtphost string
 	Identity string
+	Subject  string
 	Auth     smtp.Auth
 }
 
@@ -39,7 +40,7 @@ func (sm *SmtpData) SendEmail(email string, code int)(err error){
 		sm.Auth,
 		sm.Username,
 		[]string{email},
-		[]byte(strconv.Itoa(code)))
+		[]byte("Subject: " + sm.Subject + "\r\n" + strconv.Itoa(code)))
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -12,6 +12,7 @@
     "password": "..",
     "host": "smtp.gmail.com:587",
     "smtphost": "smtp.gmail.com",
-    "identity": ""
+    "identity": "",
+    "subject": "Lynx code"
   }
 }
