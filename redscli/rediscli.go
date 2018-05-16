@@ -10,7 +10,7 @@ import (
 
 type RedisENV interface {
 	GetKeyData(key string) (value interface{}, err error)
-	StoreData(key,value string, exp int)
+	StoreData(key,value string, exp int) error
 }
 
 type DBCli struct {
