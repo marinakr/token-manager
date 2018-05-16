@@ -1,10 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"net/http"
 	"testing"
-	"bytes"
 )
+
+func TestHealthCheck(t *testing.T) {
+	_, err := http.NewRequest("GET", "/health-check", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestRegCheckMethodNotAllowed(t *testing.T) {
 	req, err := http.NewRequest("GET", "http://localhost:2803/reg-email", nil)
@@ -41,7 +48,6 @@ func TestRegCheckBadJson(t *testing.T) {
 		}
 	}
 }
-
 
 func TestRegCheckBadEmail(t *testing.T) {
 	var jsonStr = []byte(`{"email":";X@@example", "nick":"any"}`)
