@@ -14,7 +14,7 @@ type RedisENV interface {
 }
 
 type DBCli struct {
-	*redis.Client
+	c *redis.Client
 }
 
 func New(redisCreds interface{}) DBCli {
@@ -27,7 +27,7 @@ func New(redisCreds interface{}) DBCli {
 		if err_ping != nil {
 			panic("No connection to redis")
 		} else {
-			return client
+			return DBCli{client}
 		}
 	} else {
 		panic("Error in config file: redis")
@@ -35,7 +35,7 @@ func New(redisCreds interface{}) DBCli {
 }
 
 func (cli *DBCli) GetKeyData(key string) (value interface{}, err error) {
-	val, err := cli.Get(key).Result()
+	val, err := cli.c.Get(key).Result()
 	if err == redis.Nil {
 		value = nil
 	} else {
@@ -45,7 +45,7 @@ func (cli *DBCli) GetKeyData(key string) (value interface{}, err error) {
 }
 
 func (cli *DBCli) StoreData(key,value string, exp int) {
-	err := cli.Set(key, value, time.Duration(exp)*time.Second).Err()
+	err := cli.c.Set(key, value, time.Duration(exp)*time.Second).Err()
 	if err != nil {
 		panic(err)
 	}

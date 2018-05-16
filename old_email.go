@@ -32,38 +32,7 @@ type EmailInfo struct {
 	Code     int    `json:"code"`
 }
 
-type SmtpData struct {
-	Username string
-	Password string
-	Host     string
-	Smtphost string
-	Identity string
-	Auth     smtp.Auth
-}
 
-func InitEmailClient(smtpdata *SmtpData) {
-	emailCreds := config["email_creds"]
-	data, err := json.Marshal(emailCreds)
-	json.Unmarshal(data, smtpdata)
-	if err == nil {
-		smtpdata.Auth = smtp.PlainAuth(smtpdata.Identity, smtpdata.Username, smtpdata.Password, smtpdata.Smtphost)
-	} else {
-		fmt.Println("Error smtp auth")
-		panic(err)
-	}
-}
-
-func (smtpdata *SmtpData) SendEmail(ei EmailInfo) {
-	err := smtp.SendMail(
-		smtpdata.Host,
-		smtpdata.Auth,
-		smtpdata.Username,
-		[]string{ei.Email},
-		[]byte(strconv.Itoa(ei.Code)))
-	if err != nil {
-		fmt.Println(err)
-	}
-}
 
 func (ei *EmailInfo) ValidateRegdata() (code int, mess string) {
 	re_email := regexp.MustCompile(EmilaRegExp)
