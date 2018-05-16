@@ -1,60 +1,27 @@
 curl  -X POST http://localhost:2803/reg-email -d'{"email":"natakr@i.ua", "nick":"marinakr"}'
    SUCCESS:
-   {  
-      "code":0,
-      "mess":""
-   }
+   HTTP 200
 
    ERRORS:
-   {  
-      "code":1,
-      "mess":"Invalid email"
-   }
-   {  
-      "code":2,
-      "mess":"Invalid nickname"
-   }
-   //both email and nickname invalid
-   {  
-      "code":3,
-      "mess":"Invalid data"
-   }
-   {  
-      "code":4,
-      "mess":"Email  already in use"
-   }
-
-   {  
-      "code":5,
-      "mess":"Nick already in use"
-   }
-
-
+   HTTP 400
+   "Invalid email"
+   "Invalid nickname"
+   "Email  already in use"
+   "Nick already in use"
+   "Invalid json"
+   "DB write nick error"
+   "DB write code error"
 
 curl  -X POST http://localhost:2803/confirm-email -d'{"email":"natakr@i.ua", "code":8452}'
 
 SUCCESS:
-{  
-	"code":0,
-	"mess":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTg1MjIwMTIsImlvdCI6MTUyNjM4MTIxMiwidXNlciI6Im1hcmluYWtyIn0.TuyKuzd3u8fRZk1yx1Gg0lf7Sbf38Ze_rOOYLUiWc-k"
-}
+   SUCCESS:
+   HTTP 200
+   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1NTg1MjIwMTIsImlvdCI6MTUyNjM4MTIxMiwidXNlciI6Im1hcmluYWtyIn0.TuyKuzd3u8fRZk1yx1Gg0lf7Sbf38Ze_rOOYLUiWc-k"
 
-ERRORS:
-{  
-	"code":7,
-	"mess":"Confirmation code is not match"
-}
-
-{  
-	"code":6,
-	"mess":"Confirmation time expired / Email not found"
-}
-
-
-ERROR CODE -1: equal to 500 HTTP error: "database error"
-
-BAD Request:
-curl  -X POST http://localhost:2803/reg-email -d'{"Bad json"}'
-< HTTP/1.1 400 Bad Request
-Invalid json
-
+   ERRORS:
+   HTTP 400
+   "Invalid json"
+   "Invalid data"
+   "Confirmation code is not match"
+   "Confirmation time expired / Email not found"

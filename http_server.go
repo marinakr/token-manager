@@ -7,7 +7,6 @@ import (
 	"./conf"
 	"./redscli"
 	"./sender"
-	"./utils"
 	"./reg"
 	//
 )
@@ -21,15 +20,20 @@ func (env *Env)ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
 		ei, err := reg.VailidateRegData(req)
-		if err == nil {
-			err = ei.CheckDBRegData(env.dbcli)
-			if err == nil {
-
-			} else {
-				http.Error(rw, err.Error(), http.StatusConflict)
-			}
-		} else {
+		if err != nil {
 			http.Error(rw, err.Error(), http.StatusBadRequest)
+		} else {
+			err = ei.CheckDBRegData(env.dbcli)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusConflict)
+			} else {
+				err = ei.RegisterEmail(env.dbcli, env.smtpcli)
+				if err != nil{
+					http.Error(rw, err.Error(), http.StatusBadRequest)
+				} else {
+					rw.WriteHeader(http.StatusOK)
+				}
+			}
 		}
 	default:
 		http.Error(rw, "Method not allowed", http.StatusMethodNotAllowed)
@@ -40,14 +44,17 @@ func (env *Env)ReceiveEmail(rw http.ResponseWriter, req *http.Request) {
 func (env *Env)ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case "POST":
-		ec := &EmailConfirm{}
-		code, mess := utils.DecodeReqBody(req, ec)
-		if code != Ok {
-			http.Error(rw, mess, code)
+		ec, err := reg.ValidateEmailConfirm(req)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusBadRequest)
 		} else {
-			code, mess := ConfirmEmail(ec)
-			payload := utils.GenResponsePayload(code, mess)
-			EncodeReqResp(rw, http.StatusOK, payload)
+			jwt, err := ec.CheckEmailConfirm(env.dbcli)
+			if err != nil{
+				http.Error(rw, err.Error(), http.StatusBadRequest)
+			} else {
+				fmt.Fprint(rw, jwt)
+				rw.WriteHeader(http.StatusOK)
+			}
 		}
 	default:
 		http.Error(rw, "Method not allowed", http.StatusMethodNotAllowed)
@@ -58,8 +65,8 @@ func (env *Env)ReceiveEmailCode(rw http.ResponseWriter, req *http.Request) {
 func main() {
 	config := conf.NewConig()
 	dbclient := redscli.New(config.RedisConf())
-	smtpsender := sender.NewEmailSender(config.EmailConf())
-	env := &Env{dbcli: &dbclient, smtpcli: smtpsender}
+	smtpsender := sender.New(config.EmailConf())
+	env := &Env{dbcli: dbclient, smtpcli: smtpsender}
 
 	//main app
 	port := config.PortConf()

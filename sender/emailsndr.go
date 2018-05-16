@@ -20,7 +20,7 @@ type SmtpData struct {
 	Auth     smtp.Auth
 }
 
-func NewEmailSender(emailCreds interface{}) *SmtpData {
+func New(emailCreds interface{}) *SmtpData {
 	smtpdata := &SmtpData{}
 	data, err := json.Marshal(emailCreds)
 	json.Unmarshal(data, smtpdata)
@@ -33,8 +33,8 @@ func NewEmailSender(emailCreds interface{}) *SmtpData {
 	}
 }
 
-func (sm *SmtpData) SendEmail(email string, code int){
-	err := smtp.SendMail(
+func (sm *SmtpData) SendEmail(email string, code int)(err error){
+	err = smtp.SendMail(
 		sm.Host,
 		sm.Auth,
 		sm.Username,
@@ -43,4 +43,5 @@ func (sm *SmtpData) SendEmail(email string, code int){
 	if err != nil {
 		fmt.Println(err)
 	}
+	return
 }
