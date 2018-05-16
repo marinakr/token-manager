@@ -1,7 +1,8 @@
 # token-manager
 Web-server
 
-Developed on Andrey's laptop)
+Developed on my and Andrey's laptop - so here TWO git users
+
 HTTP curls examples in CURLsexamples file
 DB: redis
 To start token manager:
