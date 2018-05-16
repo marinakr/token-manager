@@ -81,7 +81,7 @@ func (ei *EmailReg) CheckDBRegData(
 		err = errors.New("NickName already in use")
 	}
 	if emeilaval != nil {
-		errors.New("Email already in use")
+		err = errors.New("Email already in use")
 
 	}
 	return
