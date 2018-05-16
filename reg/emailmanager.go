@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"github.com/dgrijalva/jwt-go"
 	"fmt"
+	"jwt-go"
 )
 
 const (
@@ -40,12 +41,14 @@ func VailidateRegData(req *http.Request) (ei EmailReg, err error) {
 	} else {
 		re_email := regexp.MustCompile(EmilaRegExp)
 		re_nodename := regexp.MustCompile(NickNameRegExp)
-		is_email := re_email.MatchString(string(ei.Email))
-		is_nick := re_nodename.MatchString(string(ei.NickName))
+		is_email := re_email.MatchString(string(v.Email))
+		is_nick := re_nodename.MatchString(string(v.NickName))
 		if !is_email {
 			err = errors.New("Invalid email")
 		} else if !is_nick {
 			err = errors.New("Invalid nickname")
+		} else {
+			ei = *v
 		}
 	}
 	return
@@ -59,9 +62,11 @@ func ValidateEmailConfirm(req *http.Request) (ei EmailConf, err error) {
 		err = errors.New("Invalid json")
 	} else {
 		re_email := regexp.MustCompile(EmilaRegExp)
-		is_email := re_email.MatchString(string(ei.Email))
+		is_email := re_email.MatchString(string(v.Email))
 		if !is_email || v.Code > MaxCODE || v.Code < MinCODE {
 			err = errors.New("Invalid data")
+		} else {
+			ei = *v
 		}
 	}
 	return
