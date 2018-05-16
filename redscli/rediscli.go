@@ -10,7 +10,7 @@ import (
 
 type RedisENV interface {
 	GetKeyData(key string) (value interface{}, err error)
-	StoreData(key,value string, exp int) error
+	StoreData(key string, value interface{}, exp int) error
 }
 
 type DBCli struct {
@@ -44,7 +44,7 @@ func (cli *DBCli) GetKeyData(key string) (value interface{}, err error) {
 	return
 }
 
-func (cli *DBCli) StoreData(key, value string, exp int) error {
+func (cli *DBCli) StoreData(key string, value interface{}, exp int) error {
 	return cli.Set(key, value, time.Duration(exp)*time.Second).Err()
 }
 

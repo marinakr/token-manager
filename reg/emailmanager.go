@@ -2,15 +2,15 @@ package reg
 
 import (
 	//
-	"net/http"
 	"encoding/json"
 	"errors"
-	"math/rand"
-	"time"
-	"strconv"
-	"regexp"
-	"github.com/dgrijalva/jwt-go"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"math/rand"
+	"net/http"
+	"regexp"
+	"strconv"
+	"time"
 	//
 )
 
@@ -29,8 +29,8 @@ type EmailReg struct {
 }
 
 type EmailConf struct {
-	Email    string `json:"email"`
-	Code int `json:"code"`
+	Email string `json:"email"`
+	Code  int    `json:"code"`
 }
 
 func VailidateRegData(req *http.Request) (ei EmailReg, err error) {
@@ -74,7 +74,9 @@ func ValidateEmailConfirm(req *http.Request) (ei EmailConf, err error) {
 }
 
 func (ei *EmailReg) CheckDBRegData(
-	dbcli interface{GetKeyData(key string) (interface{}, error)}) (err error){
+	dbcli interface {
+		GetKeyData(key string) (interface{}, error)
+	}) (err error) {
 	emeilaval, _ := dbcli.GetKeyData(ei.NickName)
 	nickaval, _ := dbcli.GetKeyData(ei.Email)
 	if nickaval != nil {
@@ -89,12 +91,16 @@ func (ei *EmailReg) CheckDBRegData(
 
 func Random(min, max int) int {
 	rand.Seed(time.Now().Unix())
-	return rand.Intn(max - min) + min
+	return rand.Intn(max-min) + min
 }
 
-func (ei EmailReg)RegisterEmail(
-	dbcli interface{StoreData(string, string, int) error},
-	smtp interface{SendEmail(string, int) error})(err error){
+func (ei EmailReg) RegisterEmail(
+	dbcli interface {
+		StoreData(string, interface{}, int) error
+	},
+	smtp interface {
+		SendEmail(string, int) error
+	}) (err error) {
 	code := Random(MinCODE, MaxCODE)
 	//store code 60 seconds
 	err = dbcli.StoreData(ei.Email, ei.NickName, 60)
@@ -102,7 +108,7 @@ func (ei EmailReg)RegisterEmail(
 		errors.New("DB write nick error")
 	} else {
 		//book nickname 60 seconds for confirmation
-		err = dbcli.StoreData(ei.NickName, strconv.Itoa(code), 60)
+		err = dbcli.StoreData(ei.NickName, code, 60)
 		if err != nil {
 			errors.New("DB write code error")
 		} else {
@@ -129,16 +135,17 @@ func GenJWT(nickname string) string {
 }
 
 func (ec *EmailConf) CheckEmailConfirm(
-	dbcli interface{
-		StoreData(string, string, int) error
+	dbcli interface {
+		StoreData(string, interface{}, int) error
 		GetKeyData(key string) (interface{}, error)
-	})(jwtoken string, err error){
+	}) (jwtoken string, err error) {
 	nickname, _ := dbcli.GetKeyData(ec.Email)
 	if nickname == nil {
 		err = errors.New("Confirmation time expired / Email not found")
 	} else {
 		nick := nickname.(string)
-		code, _ := dbcli.GetKeyData(nick)
+		codestr, _ := dbcli.GetKeyData(nick)
+		code, _ := strconv.Atoi(codestr.(string))
 		if code != ec.Code {
 			err = errors.New("Confirmation code is not match")
 		} else {
