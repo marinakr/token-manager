@@ -8,7 +8,7 @@ import (
 )
 
 type SmtpENV interface {
-	SendEmail(email string, code int)
+	SendEmail(email string, code int) error
 }
 
 type SmtpData struct {
