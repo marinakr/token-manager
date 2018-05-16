@@ -75,14 +75,14 @@ func ValidateEmailConfirm(req *http.Request) (ei EmailConf, err error) {
 
 func (ei *EmailReg) CheckDBRegData(
 	dbcli interface{GetKeyData(key string) (interface{}, error)}) (err error){
-	nickaval, _ := dbcli.GetKeyData(ei.NickName)
+	emeilaval, _ := dbcli.GetKeyData(ei.NickName)
+	nickaval, _ := dbcli.GetKeyData(ei.Email)
 	if nickaval != nil {
-		emeilaval, _ := dbcli.GetKeyData(ei.Email)
-		if emeilaval != nil {
-			errors.New("Email already in use")
-		}
-	} else {
 		err = errors.New("NickName already in use")
+	}
+	if emeilaval != nil {
+		errors.New("Email already in use")
+
 	}
 	return
 }
