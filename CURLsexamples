@@ -6,11 +6,12 @@ curl  -X POST http://localhost:2803/reg-email -d'{"email":"natakr@i.ua", "nick":
    HTTP 400
    "Invalid email"
    "Invalid nickname"
-   "Email  already in use"
-   "Nick already in use"
    "Invalid json"
    "DB write nick error"
    "DB write code error"
+   HTTP 409
+   "Email  already in use"
+   "Nick already in use"
 
 curl  -X POST http://localhost:2803/confirm-email -d'{"email":"natakr@i.ua", "code":8452}'
 
