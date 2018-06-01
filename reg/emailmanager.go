@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 	//
+	"jwt-go"
 )
 
 const (
@@ -77,14 +78,13 @@ func (ei *EmailReg) CheckDBRegData(
 	dbcli interface {
 		GetKeyData(key string) (interface{}, error)
 	}) (err error) {
-	emeilaval, _ := dbcli.GetKeyData(ei.NickName)
+	email, _ := dbcli.GetKeyData(ei.NickName)
 	nickaval, _ := dbcli.GetKeyData(ei.Email)
-	if nickaval != nil {
+	if (nickaval != nil) || (nickaval.(string) != ei.NickName) {
 		err = errors.New("NickName already in use")
 	}
-	if emeilaval != nil {
+	if (email != nil) || (email.(string) != ei.Email) {
 		err = errors.New("Email already in use")
-
 	}
 	return
 }
@@ -149,6 +149,8 @@ func (ec *EmailConf) CheckEmailConfirm(
 		if code != ec.Code {
 			err = errors.New("Confirmation code is not match")
 		} else {
+			dbcli.StoreData(ec.Email, nick, 0)
+			dbcli.StoreData(nick, ec.Email, 0)
 			jwtoken = GenJWT(nick)
 		}
 	}
