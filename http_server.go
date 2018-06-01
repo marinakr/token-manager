@@ -4,10 +4,10 @@ import (
 	//
 	"fmt"
 	"net/http"
-	"./conf"
-	"./redscli"
-	"./sender"
-	"./reg"
+	"token-manager/conf"
+	"token-manager/redscli"
+	"token-manager/sender"
+	"token-manager/reg"
 	//
 )
 

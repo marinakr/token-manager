@@ -4,6 +4,7 @@ Web-server
 Developed on my and Andrey's laptop - so here TWO git users
 
 HTTP curls examples in CURLsexamples file
+
 DB: redis
 To start token manager:
 ```
